@@ -34,6 +34,20 @@ class WorldList(commands.Command):
         self._print(self.context.world.rooms.values())
 
 
+class RoomFind(commands.Command):
+    def __init__(self):
+        super().__init__('room.find', help_text='search for a room that contains the given string')
+
+    def _cmd(self, name: str):
+        results = []
+        for room in self.context.world.rooms.values():
+            if name.lower() in room.name.lower():
+                results.append(room)
+
+        for room in results:
+            self._print("{}: {}", room.id, room.name)
+
+
 class Quit(commands.Command):
     def __init__(self):
         super().__init__('quit', help_text='exit the game')
@@ -85,6 +99,7 @@ def initialize_commands():
     commands.register(Walk('west'))
     commands.register(RoomAdd())
     commands.register(RoomAddExit())
+    commands.register(RoomFind())
     commands.register(WorldList())
 
     commands.register(commands.Help())
