@@ -13,4 +13,4 @@ class Player:
         if not isinstance(fmt, str):
             print('{}'.format(fmt))
         else:
-            print(fmt.format(*args, **kwargs), file=self.output)
+            print(fmt.format(*args, **kwargs), file=self.output, **kwargs)
