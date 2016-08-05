@@ -1,19 +1,11 @@
 import sys
 
-from map import Map
-
-
-class Player:
-    def __init__(self):
-        self.room_id = 1
-
-    def set_room(self, room_id: int):
-        self.room_id = room_id
-
+from world import World
+from player import Player
 
 # state
 
-current_map = None  # type: Map
+current_world = None  # type: World
 player = Player()
 
 
@@ -22,7 +14,7 @@ player = Player()
 
 def walk(args):
     direction = args[0]
-    room = current_map.get_room(player.room_id)
+    room = current_world.get_room(player.room_id)
     try:
         next_room = room.get_exit(direction)
     except KeyError:
@@ -37,21 +29,21 @@ def quit_cmd(_):
 
 
 def add_room(args):
-    global current_map
+    global current_world
     (rid, name, desc) = args
-    current_map.add_room(rid, name, desc)
+    current_world.add_room(rid, name, desc)
 
 
-def load_map(args):
-    global current_map
-    current_map = Map(args[0])
+def load_world(args):
+    global current_world
+    current_world = World(args[0])
 
 
 def room_add(args):
     if len(args) != 2:
         print("usage: room.add <name> <description>")
         return
-    room = current_map.add_room(*args)
+    room = current_world.add_room(*args)
     print(room)
 
 
@@ -61,12 +53,12 @@ def room_add_exit(args):
         return
     source = int(args[0])
     dest = int(args[1])
-    current_map.add_exit(current_map.get_room(source), current_map.get_room(dest), args[2])
-    print(current_map.get_room(source))
+    current_world.add_exit(current_world.get_room(source), current_world.get_room(dest), args[2])
+    print(current_world.get_room(source))
 
 
-def map_list(_):
-    print(current_map.rooms.values())
+def world_list(_):
+    print(current_world.rooms.values())
 
 
 commands = {
@@ -80,12 +72,15 @@ commands = {
     # admin commands
     'room.add': room_add,
     'room.add-exit': room_add_exit,
-    'map.ls': map_list,
-    'map.save': lambda _: current_map.save()
+    'world.ls': world_list,
+    'world.save': lambda _: current_world.save()
 }
 
 
 def handle(cmd):
+    if len(cmd) == 0:
+        return
+
     verb = cmd.split()[0]
     args = cmd.split()[1:]
 
@@ -110,9 +105,9 @@ def prompt_loop():
 
 
 def main():
-    global current_map
-    current_map = Map("map.json")
-    print(current_map.get_room(player.room_id).describe())
+    global current_world
+    current_world = World("world.json")
+    print(current_world.get_room(player.room_id).describe())
     prompt_loop()
 
 

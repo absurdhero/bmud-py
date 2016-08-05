@@ -5,7 +5,7 @@ from typing import Dict
 from room import Room
 
 
-class Map:
+class World:
     def __init__(self, file_path: str):
         self.next = 1
         self.file_path = file_path
@@ -18,7 +18,7 @@ class Map:
                 self.map = json.load(f)
         except FileNotFoundError:
             self.map['rooms'] = []
-            print("warning: '%s' not found. Loading empty map." % file_path)
+            print("warning: '%s' not found. Loading empty world." % file_path)
             self.add_room("start", "In the beginning, there was only this room.")
             return
 
@@ -44,16 +44,16 @@ class Map:
         self.rooms[source.id].add_exit(target, direction)
 
     def save(self):
-        room_maps = []
+        map_rooms = []
         for rid, room in self.rooms.items():
-            room_maps.append({
+            map_rooms.append({
                 "id": rid,
                 "name": room.name,
                 "desc": room.description,
                 "exits": room.exit_ids()
             })
 
-        self.map["rooms"] = room_maps
+        self.map["rooms"] = map_rooms
         with open(self.file_path, "w") as f:
             json.dump(self.map, f, indent=2)
 
