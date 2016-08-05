@@ -54,9 +54,8 @@ class Command:
 
         return usage
 
-    @staticmethod
-    def _print(fmt, *args, **kwargs):
-        print(fmt.format(*args, **kwargs))
+    def _print(self, fmt, *args, **kwargs):
+        self.context.player.print(fmt, *args, **kwargs)
 
 
 def register(cmd: Command):
@@ -76,7 +75,7 @@ def handle(context: CommandContext, cmd_line: str):
     try:
         command = _commands[verb]
     except KeyError:
-        print("unknown command")
+        context.player.print("unknown command")
         return
 
     command.apply(context, args)

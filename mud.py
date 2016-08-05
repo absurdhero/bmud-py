@@ -22,8 +22,8 @@ class RoomAddExit(commands.Command):
     def _cmd(self, source_id, destination_id, direction):
         world = self.context.world
 
-        self.context.world.add_exit(world.get_room(source_id), world.get_room(destination_id), direction)
-        self._print(world.get_room(source_id))
+        self.context.world.add_exit(world.get_room(int(source_id)), world.get_room(int(destination_id)), direction)
+        self._print(world.get_room(int(source_id)))
 
 
 class WorldList(commands.Command):
@@ -69,37 +69,45 @@ class Walk(commands.Command):
             self.context.player.set_room(next_room.id)
             self._print(next_room.describe())
 
+    def _usage(self):
+        if self.direction:
+            return "walk"
+        else:
+            return "walk <direction>"
 
-commands.register(Quit())
-commands.register(Walk())
-commands.register(Walk('north'))
-commands.register(Walk('east'))
-commands.register(Walk('south'))
-commands.register(Walk('west'))
-commands.register(RoomAdd())
-commands.register(RoomAddExit())
-commands.register(WorldList())
 
-commands.register(commands.Help())
+def initialize_commands():
+    commands.register(Quit())
+    commands.register(Walk())
+    commands.register(Walk('north'))
+    commands.register(Walk('east'))
+    commands.register(Walk('south'))
+    commands.register(Walk('west'))
+    commands.register(RoomAdd())
+    commands.register(RoomAddExit())
+    commands.register(WorldList())
+
+    commands.register(commands.Help())
 
 
 def prompt_loop(player: Player):
     try:
-        print("> ", end='', flush=True)
-        for line in sys.stdin:
+        player.print("> ", end='', flush=True)
+        for line in player.input:
             cmd = line.strip()
             context = commands.CommandContext(player)
             commands.handle(context, cmd)
-            print("> ", end='', flush=True)
+            player.print("> ", end='', flush=True)
     except EOFError:
-        sys.exit(0)
+        return
 
 
 def main():
     world = World("world.json")
-    player = Player(world)
-    print(world.get_room(player.room_id).describe())
+    player = Player(world, sys.stdin, sys.stdout)
+    initialize_commands()
+    player.print(world.get_room(player.room_id).describe())
     prompt_loop(player)
 
-
-main()
+if __name__ == '__main__':
+    main()
