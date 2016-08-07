@@ -1,5 +1,6 @@
 import sys
 
+import lispy2
 import commands
 
 from world import World
@@ -24,6 +25,26 @@ class RoomAddExit(commands.Command):
 
         self.context.world.add_exit(world.get_room(int(source_id)), world.get_room(int(destination_id)), direction)
         self._print(world.get_room(int(source_id)))
+
+
+class RoomAddEvent(commands.Command):
+    def __init__(self):
+        super().__init__('room.add-event', help_text='apply a scripted event to a room')
+
+    def _cmd(self, room_id, event, *script):
+        script = ' '.join(script)
+        if room_id == 'here':
+            room_id = self.context.player.room_id
+        else:
+            room_id = int(room_id)
+
+        room = self.context.world.get_room(room_id)
+
+        try:
+            lispy2.parse(script)
+            room.add_event(event, script)
+        except SyntaxError as e:
+            self._print("could not parse script: " + str(e))
 
 
 class WorldList(commands.Command):
@@ -75,13 +96,18 @@ class Walk(commands.Command):
             raise TypeError("expected direction argument")
 
         room = self.context.world.get_room(self.context.player.room_id)
+
+        room.execute_event('exit-room', self.context)
+
         try:
             next_room = room.get_exit(direction)
         except KeyError:
             self._print("cannot walk that way")
         else:
-            self.context.player.set_room(next_room.id)
-            self._print(next_room.describe())
+            event = next_room.execute_event('enter-room', self.context)
+            if event is not False:
+                self.context.player.set_room(next_room.id)
+                self._print(next_room.describe())
 
     def _usage(self):
         if self.direction:
@@ -100,6 +126,7 @@ def initialize_commands():
     commands.register(RoomAdd())
     commands.register(RoomAddExit())
     commands.register(RoomFind())
+    commands.register(RoomAddEvent())
     commands.register(WorldList())
 
     commands.register(commands.Help())
@@ -126,3 +153,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

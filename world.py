@@ -6,19 +6,22 @@ from room import Room
 
 
 class World:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str = ''):
         self.next = 1
         self.file_path = file_path
         self.rooms = {}  # type: Dict[int, Room]
 
         self.map = {}
 
-        try:
-            with open(file_path) as f:
-                self.map = json.load(f)
-        except FileNotFoundError:
+        if file_path != '':
+            try:
+                with open(file_path) as f:
+                    self.map = json.load(f)
+            except FileNotFoundError:
+                print("warning: '%s' not found. Loading empty world." % file_path)
+
+        if len(self.map) == 0:
             self.map['rooms'] = []
-            print("warning: '%s' not found. Loading empty world." % file_path)
             self.add_room("start", "In the beginning, there was only this room.")
             return
 
@@ -28,8 +31,12 @@ class World:
 
         for entry in self.map["rooms"]:
             room = self.get_room(entry["id"])
+
             for direction, rid in entry["exits"].items():
                 room.add_exit(self.get_room(rid), direction)
+
+            for event, script in entry["events"].items():
+                room.add_event(event, script)
 
     def get_room(self, rid: int) -> Room:
         return self.rooms[rid]
@@ -46,12 +53,7 @@ class World:
     def save(self):
         map_rooms = []
         for rid, room in self.rooms.items():
-            map_rooms.append({
-                "id": rid,
-                "name": room.name,
-                "desc": room.description,
-                "exits": room.exit_ids()
-            })
+            map_rooms.append(room.to_dict())
 
         self.map["rooms"] = map_rooms
         with open(self.file_path, "w") as f:

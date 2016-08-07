@@ -2,6 +2,8 @@ import unittest
 
 import player
 import mud
+import commands
+
 from world import World
 
 
@@ -19,12 +21,19 @@ class TestPlayer(player.Player):
         # print(captured)  # helpful for debugging failing tests
 
 
-def run_commands(*commands, world=None) -> list:
+def run_commands(*command_list, world=None) -> list:
     if not world:
-        world = World("test.json")
+        world = World()
+
     test_player = TestPlayer(world, commands)
+
     mud.initialize_commands()
-    mud.prompt_loop(test_player)
+
+    for line in command_list:
+        cmd = line.strip()
+        context = commands.CommandContext(test_player)
+        commands.handle(context, cmd)
+
     return test_player.output
 
 
@@ -49,6 +58,15 @@ class TestCommands(unittest.TestCase):
         self.assertNoErrors(output)
         self.assertIn('\nfoo\n\nbar\n\nexits: ', output)
 
+    def test_enter_room_event(self):
+        output = run_commands('room.add foo bar',
+                              'room.add-exit 1 2 east',
+                              'room.add-event 2 enter-room (say "you entered!")',
+                              'room.add-event 1 enter-room (say "you came back!")',
+                              'walk east')
+        self.assertNoErrors(output)
+        self.assertIn('you entered!', output)
+        self.assertNotIn('you came back!', output)
 
 if __name__ == '__main__':
     unittest.main()

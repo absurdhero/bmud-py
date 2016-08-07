@@ -179,8 +179,6 @@ class Env(dict):
     """An environment: a dict of {'var':val} pairs, with an outer Env."""
 
     def __init__(self, parms=(), args=(), outer=None, **kwargs):
-        super().__init__(**kwargs)
-
         # Bind parm list to corresponding args, or single parm to list of args
         self.outer = outer
         if isa(parms, Symbol):
@@ -190,6 +188,9 @@ class Env(dict):
                 raise TypeError('expected %s, given %s, '
                                 % (to_string(parms), to_string(args)))
             self.update(zip(parms, args))
+
+        for key, value in kwargs.items():
+            self[Sym(key)] = value
 
     def find(self, var):
         """Find the innermost Env where var appears."""
@@ -230,14 +231,35 @@ def add_globals(self):
     self.update(vars(math))
     self.update(vars(cmath))
     self.update({
-        '+': op.add, '-': op.sub, '*': op.mul, '/': op.truediv, 'not': op.not_,
-        '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq,
-        'equal?': op.eq, 'eq?': op.is_, 'length': len, 'cons': cons,
-        'car': lambda x: x[0], 'cdr': lambda x: x[1:], 'append': op.add,
-        'list': lambda *x: list(x), 'list?': lambda x: isa(x, list),
-        'null?': lambda x: x == [], 'symbol?': lambda x: isa(x, Symbol),
-        'boolean?': lambda x: isa(x, bool), 'pair?': is_pair,
-        'eval': lambda x: eval(expand(x)), 'call/cc': callcc,
+        '+': op.add,
+        '-': op.sub,
+        '*': op.mul,
+        '/': op.truediv,
+        'not': op.not_,
+        '>': op.gt,
+        '<': op.lt,
+        '>=': op.ge,
+        '<=': op.le,
+        '=': op.eq,
+        'equal?': op.eq,
+        'eq?': op.is_,
+        'length': len,
+        'cons': cons,
+        'car': lambda x: x[0],
+        'cdr': lambda x: x[1:],
+        'cadr': lambda x: x[1:][0],
+        'cdar': lambda x: x[0][1:],
+        'caar': lambda x: x[0][0],
+        'cddr': lambda x: x[2:],
+        'append': op.add,
+        'list': lambda *x: list(x),
+        'list?': lambda x: isa(x, list),
+        'null?': lambda x: x == [],
+        'symbol?': lambda x: isa(x, Symbol),
+        'boolean?': lambda x: isa(x, bool),
+        'pair?': is_pair,
+        'eval': lambda x: eval(expand(x)),
+        'call/cc': callcc,
         'apply': lambda proc, l: proc(*l),
         'display': lambda x, port=sys.stdout: port.write(x if isa(x, str) else to_string(x)),
         # Remove IO for safety
