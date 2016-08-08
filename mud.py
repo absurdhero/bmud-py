@@ -1,6 +1,5 @@
 import sys
 
-import lispy2
 import commands
 
 from world import World
@@ -31,8 +30,7 @@ class RoomAddEvent(commands.Command):
     def __init__(self):
         super().__init__('room.add-event', help_text='apply a scripted event to a room')
 
-    def _cmd(self, room_id, event, *script):
-        script = ' '.join(script)
+    def _cmd(self, room_id, event, script):
         if room_id == 'here':
             room_id = self.context.player.room_id
         else:
@@ -41,7 +39,6 @@ class RoomAddEvent(commands.Command):
         room = self.context.world.get_room(room_id)
 
         try:
-            lispy2.parse(script)
             room.add_event(event, script)
         except SyntaxError as e:
             self._print("could not parse script: " + str(e))
@@ -136,9 +133,8 @@ def prompt_loop(player: Player):
     try:
         player.print("> ", end='', flush=True)
         for line in player.input:
-            cmd = line.strip()
             context = commands.CommandContext(player)
-            commands.handle(context, cmd)
+            commands.handle(context, line)
             player.print("> ", end='', flush=True)
     except EOFError:
         return

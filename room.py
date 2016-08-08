@@ -42,8 +42,7 @@ class Room:
         # build a new environment for this room and inherit from the player's environment
         env = lispy2.Env(outer=context.player.env, **self.env)
 
-        expr = lispy2.parse(self.events[event])
-        return lispy2.eval(expr, env)
+        return lispy2.eval(self.events[event], env)
 
     def to_dict(self):
         return {

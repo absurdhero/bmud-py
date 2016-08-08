@@ -1,4 +1,5 @@
 import inspect
+import lispy2
 
 from world import World
 from player import Player
@@ -68,7 +69,8 @@ def handle(context: CommandContext, cmd_line: str):
     if len(cmd_line) == 0:
         return
 
-    tokens = cmd_line.split()
+    tokens = lispy2.parse('('+cmd_line+')')
+
     verb = tokens[0]
     args = tokens[1:]
 
